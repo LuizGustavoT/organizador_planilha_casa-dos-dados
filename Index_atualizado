@@ -1,0 +1,67 @@
+  const fs = require('fs'); // Importar o módulo fs
+  const { link } = require('fs/promises');
+
+  function extrairInformacoes(texto, cnae) {
+    const padroes = {
+      CNPJ: /^CNPJ:\n\n(\d{2}\d{3}\d{3}\/\d{4}-\d{2})/m,
+      RazaoSocial: /^Razão Social:\s*(.+)/m,
+      NomeFantasia: /^Nome Fantasia:\s*(.+)/m,
+      Tipo: /^Tipo:\s*(.+)/m,
+      DataAbertura: /^Data de Abertura:\s*(\d{2}\/\d{2}\/\d{4})/m,
+      SituacaoCadastral: /^Situação Cadastral:\s*(.+)/m,
+      DataSituacaoCadastral: /^Data da Situação:\s*(\d{2}\/\d{2}\/\d{4})/m,
+      CapitalSocial: /^Capital Social:\s*(.+)/m,
+      NaturezaJuridica: /^Natureza Jurídica:\s*(.+)/m,
+      empresaMEI: /^Empresa MEI:\s*(.+)/m,
+      Logradouro: /^Logradouro:\s*(.+)/m,
+      Numero: /^Número:\s*(.+)/m,
+      Complemento: /^Complemento:\s*(.+)/m,
+      CEP: /^CEP:\s*(\d{5}-\d{3})/m,
+      Bairro: /^Bairro:\s*(.+)/m,
+      Municipio: /^Municipio:\s*(.+)/m,
+      UF: /^Estado:\s*(.+)/m,
+      Telefone: /^Telefone:\s*([\d\s-]+)/m,
+      Email: /^Email:\s*(.+)/m,
+    };
+  const informacoes = {};
+  
+  // Extrair CNPJ separadamente:
+  const matchCNPJ = texto.match(/^CNPJ:\n\n(.+)/m);
+  if (matchCNPJ) {
+    informacoes.CNPJ = matchCNPJ[1].trim().replace(/\./g, ''); // Remover pontos se houver
+  } else {
+    informacoes.CNPJ = null;
+  }
+
+  // Extrair os outros campos:
+  for (const chave in padroes) {
+    if (chave !== 'CNPJ') { // Ignorar CNPJ já extraído
+      const correspondencia = texto.match(padroes[chave]);
+      informacoes[chave] = correspondencia ? correspondencia[1].trim() : null;
+    }
+  }
+
+  // Incluir CNAE
+  informacoes.cnae = cnae; 
+  return informacoes;
+}
+
+// JSON de entrada (fora da função)
+const jsonInput = [];
+
+// Processar cada objeto do JSON
+const informacoesSeparadas = jsonInput.map(item => {
+  return extrairInformacoes(item.Informações, item.CNAE); // Remover ";" extra
+});
+
+// Exibir resultados
+console.log("Lista de Empresas:", informacoesSeparadas);  // Vai organizar todos os jasons especificados anteriormente especificado
+
+// Converter a lista de objetos em texto
+const textoParaSalvar = JSON.stringify(informacoesSeparadas, null, 2); // Indentação para melhor legibilidade
+
+// Salvar o texto no arquivo 'informacoes.txt'
+fs.writeFile('informacoes para Cosmeticos AC exportar.txt', textoParaSalvar, (err) => {
+  if (err) throw err;
+  console.log('Informações salvas com sucesso no arquivo informacoes.txt!');
+});
